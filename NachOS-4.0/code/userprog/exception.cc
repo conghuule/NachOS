@@ -130,9 +130,14 @@ void handlePrintNum()
 }
 void handleReadChar()
 {
+	char ch;
+	ch = SysReadChar();
+	kernel->machine->WriteRegister(2, (int)ch);
 }
 void handlePrintChar()
 {
+	char ch = (char)kernel->machine->ReadRegister(4);
+	SysPrintNum(ch);
 }
 void handleRandomNum()
 {

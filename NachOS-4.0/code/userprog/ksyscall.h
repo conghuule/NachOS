@@ -126,9 +126,20 @@ unsigned int SysRandomNum()
 }
 char *SysReadString(int length)
 {
+  char *buffer = new char[length + 1];
+  for (int i = 0; i < length; i++)
+  {
+    buffer[i] = SysReadChar();
+  }
+  buffer[length] = '\0';
+  return buffer;
 }
 
 void PrintString(char *buffer, int length)
 {
+  for (int i = 0; i < length; i++)
+  {
+    kernel->synchConsoleOut->PutChar(buffer[i]);
+  }
 }
 #endif /* ! __USERPROG_KSYSCALL_H__ */
