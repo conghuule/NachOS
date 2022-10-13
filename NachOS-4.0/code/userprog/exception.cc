@@ -180,6 +180,7 @@ void handlePrintString()
 
 	increase_PC();
 }
+
 void ExceptionHandler(ExceptionType which)
 {
 	int type = kernel->machine->ReadRegister(2);
