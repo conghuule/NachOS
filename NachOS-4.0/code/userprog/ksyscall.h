@@ -15,6 +15,10 @@
 #include "synchconsole.h"
 #include "machine.h"
 #include "filesys.h"
+#include "stdint.h"
+
+#define INT32_MAX_DIV_10 214748364
+
 void SysHalt()
 {
   kernel->interrupt->Halt();
@@ -24,92 +28,100 @@ int SysAdd(int op1, int op2)
 {
   return op1 + op2;
 }
-// Check character is a number or not
-bool isDigit(char ch)
+
+bool isSpace(char ch)
 {
-  if (ch >= '0' && ch <= '9')
-    return true;
-  return false;
+  return ch == ' ' || ch == '\n' || ch == '\t';
 }
 int SysReadNum()
 {
   int num = 0;
-  char ch;
   bool isNegative = false;
-  bool isNumber = true;
-  // Ignore space and end line, input while
-  while (ch == ' ' || ch == '\n')
+  bool isFirstChar = true;
+  bool isInt = true;
+
+  char ch = kernel->synchConsoleIn->GetChar();
+  while (isSpace(ch))
   {
     ch = kernel->synchConsoleIn->GetChar();
-  }
-  // Input number is a negative number
-  if (ch == '-')
-  {
-    isNegative = true;
-    ch = kernel->synchConsoleIn->GetChar();
-    if (ch == '\n' || ch == ' ')
-    {
-      return 0;
-    }
-  }
-  if (!isDigit(ch))
-  {
-    isNumber = false;
-  }
-  while (ch != '\n' && ch != ' ')
-  {
-    if (isDigit(ch))
-    {
-      num = num * 10 + ch - '0';
-    }
-    ch = kernel->synchConsoleIn->GetChar();
-    if (!isDigit(ch))
-    {
-      isNumber = false;
-    }
   }
 
-  if (!isNumber) // If not a number
-    return 0;
+  while (!isSpace(ch))
+  {
+    if (isInt)
+    {
+      if (isFirstChar && ch == '-')
+      {
+        isNegative = true;
+        isFirstChar = false;
+      }
+      else if (isFirstChar && ch == '+')
+      {
+        isFirstChar = false;
+        ch = kernel->synchConsoleIn->GetChar();
+        continue;
+      }
+      else
+      {
+        if (ch >= '0' && ch <= '9')
+        {
+          if ((isNegative && (num < INT32_MAX_DIV_10 || (num == INT32_MAX_DIV_10 && ch <= '8'))) || (!isNegative && (num < INT32_MAX_DIV_10 || (num == INT32_MAX_DIV_10 && ch <= '7'))))
+          {
+            num = num * 10 + (ch - '0');
+          }
+          else
+          {
+            num = 0;
+            isInt = false;
+          }
+        }
+        else
+        {
+          num = 0;
+          isInt = false;
+        }
 
-  if (isNegative) // Change to negative
-    num = -num;
-  return num;
+        if (isFirstChar)
+        {
+          isFirstChar = false;
+        }
+      }
+    }
+    ch = kernel->synchConsoleIn->GetChar();
+  }
+  return isNegative ? num * -1 : num;
 }
-void SysPrintNum(int op1)
+void SysPrintNum(int num)
 {
-  // Print Zero
-  if (op1 == 0)
+  if (num == 0)
   {
     kernel->synchConsoleOut->PutChar('0');
     return;
   }
 
-  // Print Negative Number
-  if (op1 < 0)
+  if (num < 0)
   {
     kernel->synchConsoleOut->PutChar('-');
-    op1 = -op1;
+    if (num == INT32_MIN)
+    {
+      for (int i = 0; i < 10; i++)
+        kernel->synchConsoleOut->PutChar("2147483648"[i]);
+      return;
+    }
+    else
+    {
+      num = -num;
+    }
   }
-  // Min and Max of Int32 have 10 digits
   char arr[10];
   int i = 0;
-  int r = 0;
-
-  // Change number to char array
-  while (op1 != 0)
+  while (num)
   {
-    r = op1 % 10;
-    arr[i] = r;
-    i++;
-    op1 = op1 / 10;
+    arr[i++] = num % 10;
+    num /= 10;
   }
-
-  // Print digits
-  for (int j = i - 1; j > -1; --j)
-  {
-    kernel->synchConsoleOut->PutChar('0' + arr[j]);
-  }
+  for (int j = i - 1; j >= 0; j--)
+    kernel->synchConsoleOut->PutChar(arr[j] + '0');
 }
 char SysReadChar()
 {
@@ -135,7 +147,7 @@ char *SysReadString(int length)
   return buffer;
 }
 
-void PrintString(char *buffer, int length)
+void SysPrintString(char *buffer, int length)
 {
   for (int i = 0; i < length; i++)
   {

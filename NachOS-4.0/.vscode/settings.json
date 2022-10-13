@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.xml": "html",
+        "*.svg": "html",
+        "syscall.h": "c"
+    }
+}

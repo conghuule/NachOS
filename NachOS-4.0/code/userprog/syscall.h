@@ -64,17 +64,17 @@ void Halt();
 // My System Calls
 int ReadNum();
 
-void PrintNum(int);
+void PrintNum(int number);
 
 char ReadChar();
 
-void PrintChar(char);
+void PrintChar(char character);
 
 unsigned int RandomNum();
 
-char *ReadString(int length);
+char *ReadString(char *buffer, int length);
 
-void PrintString(char *);
+void PrintString(char *buffer);
 
 /* ====================================================== */
 
