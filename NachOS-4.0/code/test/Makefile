@@ -160,7 +160,6 @@ string_io.o: string_io.c
 string_io: string_io.o start.o
 	$(LD) $(LDFLAGS) start.o string_io.o -o string_io.coff
 	$(COFF2NOFF) string_io.coff string_io
-
 help.o: help.c
 	$(CC) $(CFLAGS) -c help.c
 

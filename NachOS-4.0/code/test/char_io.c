@@ -3,5 +3,6 @@
 int main()
 {
     PrintChar(ReadChar());
+    Halt();
     return 0;
 }

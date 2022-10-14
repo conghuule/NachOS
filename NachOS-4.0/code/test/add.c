@@ -9,10 +9,8 @@
 
 int main()
 {
-  int result;
 
-  result = Add(42, 23);
-
+  PrintNum(ReadNum());
   Halt();
-  /* not reached */
+  return 0;
 }

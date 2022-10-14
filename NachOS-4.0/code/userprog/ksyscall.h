@@ -17,8 +17,6 @@
 #include "filesys.h"
 #include "stdint.h"
 
-#define INT32_MAX_DIV_10 214748364
-
 void SysHalt()
 {
   kernel->interrupt->Halt();
@@ -28,68 +26,65 @@ int SysAdd(int op1, int op2)
 {
   return op1 + op2;
 }
-
-bool isSpace(char ch)
+bool isDigit(char ch)
 {
-  return ch == ' ' || ch == '\n' || ch == '\t';
+  if (ch >= '0' && ch <= '9')
+  {
+    return true;
+  }
+  return false;
+}
+bool isWhitespaceCharacter(char ch)
+{
+  if (ch == ' ' || ch == '\n' || ch == '\t')
+  {
+    return true;
+  };
+  return false;
 }
 int SysReadNum()
 {
   int num = 0;
   bool isNegative = false;
-  bool isFirstChar = true;
-  bool isInt = true;
-
+  bool isNumber = true;
   char ch = kernel->synchConsoleIn->GetChar();
-  while (isSpace(ch))
+  // Skip Whitespace Character
+  while (isWhitespaceCharacter(ch))
   {
     ch = kernel->synchConsoleIn->GetChar();
   }
-
-  while (!isSpace(ch))
+  if (ch == '-')
   {
-    if (isInt)
+    isNegative = true;
+    ch = kernel->synchConsoleIn->GetChar();
+    if (isWhitespaceCharacter(ch))
     {
-      if (isFirstChar && ch == '-')
-      {
-        isNegative = true;
-        isFirstChar = false;
-      }
-      else if (isFirstChar && ch == '+')
-      {
-        isFirstChar = false;
-        ch = kernel->synchConsoleIn->GetChar();
-        continue;
-      }
-      else
-      {
-        if (ch >= '0' && ch <= '9')
-        {
-          if ((isNegative && (num < INT32_MAX_DIV_10 || (num == INT32_MAX_DIV_10 && ch <= '8'))) || (!isNegative && (num < INT32_MAX_DIV_10 || (num == INT32_MAX_DIV_10 && ch <= '7'))))
-          {
-            num = num * 10 + (ch - '0');
-          }
-          else
-          {
-            num = 0;
-            isInt = false;
-          }
-        }
-        else
-        {
-          num = 0;
-          isInt = false;
-        }
-
-        if (isFirstChar)
-        {
-          isFirstChar = false;
-        }
-      }
+      return 0;
     }
-    ch = kernel->synchConsoleIn->GetChar();
   }
-  return isNegative ? num * -1 : num;
+
+  if (!isDigit(ch))
+  {
+    isNumber = false;
+  }
+  while (!isWhitespaceCharacter(ch))
+  {
+    num = num * 10 + ch - '0';
+    ch = kernel->synchConsoleIn->GetChar();
+    if (!isDigit(ch) && !isWhitespaceCharacter(ch))
+    {
+      isNumber = false;
+    }
+  }
+  if (!isNumber)
+  {
+    return 0;
+  }
+  if (isNegative)
+  {
+    num = -num;
+  }
+  return num;
 }
 void SysPrintNum(int num)
 {
@@ -102,20 +97,11 @@ void SysPrintNum(int num)
   if (num < 0)
   {
     kernel->synchConsoleOut->PutChar('-');
-    if (num == INT32_MIN)
-    {
-      for (int i = 0; i < 10; i++)
-        kernel->synchConsoleOut->PutChar("2147483648"[i]);
-      return;
-    }
-    else
-    {
-      num = -num;
-    }
+    num = -num;
   }
   char arr[10];
   int i = 0;
-  while (num)
+  while (num != 0)
   {
     arr[i++] = num % 10;
     num /= 10;

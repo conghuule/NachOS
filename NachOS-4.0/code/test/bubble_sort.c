@@ -1,28 +1,19 @@
 #include "syscall.h"
 
-void swap(int *num1, int *num2)
-{
-    int temp = *num1;
-    *num1 = *num2;
-    *num2 = temp;
-}
-
 int main()
 {
     int a[100];
-    int n, order;
-    PrintString("Enter length of array (0 <= n <= 100): ");
-    n = ReadNum();
-    while (n < 0 || n > 100)
-    {
-        PrintString(
-            "Please enter length between 0 and 100\n");
-        PrintString("Enter length of array (0 <= n <= 100): ");
-        n = ReadNum();
-    };
-
+    int length, order;
     int i;
-    for (i = 0; i < n; i++)
+    PrintString("Enter length of array (0 <= length <= 100): ");
+    length = ReadNum();
+    while (length < 0 || length > 100)
+    {
+        PrintString("Please enter valid length (0 <= length <= 100)\n");
+        PrintString("Enter length of array (0 <= length <= 100): ");
+        length = ReadNum();
+    };
+    for (i = 0; i < length; i++)
     {
         PrintString("Enter a[");
         PrintNum(i);
@@ -41,39 +32,47 @@ int main()
 
     if (order == 1)
     {
-        int i;
-        for (i = 0; i < n; i++)
+        int temp;
+        int m = 0;
+        for (m = 0; m < length - 1; m++)
         {
-            int j;
-            for (j = 0; j < n - 1; j++)
+            int k;
+            for (k = 0; k < length - m - 1; k++)
             {
-                if (a[j] > a[j + 1])
+                if (a[k] > a[k + 1])
                 {
-                    swap(&a[j], &a[j + i]);
+                    temp = a[k];
+                    a[k] = a[k + 1];
+                    a[k + 1] = temp;
                 }
             }
         }
     }
     else if (order == 2)
     {
-        int i;
-        for (i = 0; i < n; i++)
+        int temp;
+        int m = 0;
+        for (m = 0; m < length - 1; m++)
         {
-            int j;
-            for (j = 0; j < n - 1; j++)
+            int k;
+            for (k = 0; k < length - m - 1; k++)
             {
-                if (a[j] < a[j + 1])
+                if (a[k] < a[k + 1])
                 {
-                    swap(&a[j], &a[j + i]);
+                    temp = a[k];
+                    a[k] = a[k + 1];
+                    a[k + 1] = temp;
                 }
             }
         }
     }
 
     PrintString("Sorted array: ");
-    for (i = 0; i < n; i++)
+    i = 0;
+    for (i = 0; i < length; i++)
     {
         PrintNum(a[i]);
         PrintChar(' ');
     }
+    Halt();
 }

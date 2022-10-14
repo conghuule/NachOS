@@ -58,7 +58,11 @@ void increase_PC()
 	/* set next programm counter for brach execution */
 	kernel->machine->WriteRegister(NextPCReg, kernel->machine->ReadRegister(PCReg) + 4);
 }
-
+/*
+	Copy buffer from User space to Kernel memory space
+	Input:  User space address, length of buffer
+	Output: Buffer
+*/
 char *User2System(int virtAddr, int limit)
 {
 	int index;
@@ -77,7 +81,13 @@ char *User2System(int virtAddr, int limit)
 	}
 	return kernelBuf;
 }
-
+/*
+	Copy buffer from Kernel space to User memory space
+	Input:  - address in user space
+			- limit of buffer
+			- buffer kernel memory
+	Output: number of bytes copied
+*/
 void System2User(int virtAddr, int len, char *buffer)
 {
 	if (len > 0)
@@ -93,13 +103,6 @@ void System2User(int virtAddr, int len, char *buffer)
 	}
 }
 
-void handleHalt()
-{
-	DEBUG(dbgSys, "Shutdown, initiated by user program.\n");
-	SysHalt();
-	ASSERTNOTREACHED();
-}
-
 void handleAdd()
 {
 	DEBUG(dbgSys, "Add " << kernel->machine->ReadRegister(4) << " + " << kernel->machine->ReadRegister(5) << "\n");
@@ -112,45 +115,33 @@ void handleAdd()
 	DEBUG(dbgSys, "Add returning with " << result << "\n");
 	/* Prepare Result */
 	kernel->machine->WriteRegister(2, (int)result);
-
-	increase_PC();
 }
 void handleReadNum()
 {
 	int num = 0;
 	num = SysReadNum();							 // system read integer number
 	kernel->machine->WriteRegister(2, (int)num); // write the return value to register 2
-
-	increase_PC();
 }
 void handlePrintNum()
 {
 	int num = (int)kernel->machine->ReadRegister(4);
 	SysPrintNum(num);
-
-	increase_PC();
 }
 void handleReadChar()
 {
 	char ch = SysReadChar();
 	kernel->machine->WriteRegister(2, ch);
-
-	increase_PC();
 }
 void handlePrintChar()
 {
 	char ch = (char)kernel->machine->ReadRegister(4);
 	SysPrintChar(ch);
-
-	increase_PC();
 }
 void handleRandomNum()
 {
 	unsigned int res = 0;
 	res = SysRandomNum();
 	kernel->machine->WriteRegister(2, res);
-
-	increase_PC();
 }
 
 #define MAX_READ_STRING_LENGTH 255
@@ -167,8 +158,6 @@ void handleReadString()
 	char *buffer = SysReadString(length);
 	System2User(memPtr, length, buffer);
 	delete[] buffer;
-
-	increase_PC();
 }
 void handlePrintString()
 {
@@ -177,8 +166,6 @@ void handlePrintString()
 
 	SysPrintString(buffer, strlen(buffer));
 	delete[] buffer;
-
-	increase_PC();
 }
 
 void ExceptionHandler(ExceptionType which)
@@ -211,40 +198,75 @@ void ExceptionHandler(ExceptionType which)
 		switch (type)
 		{
 		case SC_Halt:
-			handleHalt();
-			return;
+			DEBUG(dbgSys, "Shutdown, initiated by user program.\n");
 
+			SysHalt();
+
+			ASSERTNOTREACHED();
+			break;
 		case SC_Add:
 			handleAdd();
+			increase_PC();
 			return;
+
+			ASSERTNOTREACHED();
+			break;
 		case SC_ReadNum:
 			handleReadNum();
+			increase_PC();
 			return;
+
+			ASSERTNOTREACHED();
+			break;
 		case SC_PrintNum:
 			handlePrintNum();
+			increase_PC();
 			return;
+
+			ASSERTNOTREACHED();
+			break;
 		case SC_ReadChar:
 			handleReadChar();
+			increase_PC();
 			return;
+
+			ASSERTNOTREACHED();
+			break;
 		case SC_PrintChar:
 			handlePrintChar();
+			increase_PC();
 			return;
+
+			ASSERTNOTREACHED();
+			break;
 		case SC_RandomNum:
 			handleRandomNum();
+			increase_PC();
 			return;
+
+			ASSERTNOTREACHED();
+			break;
 		case SC_ReadString:
 			handleReadString();
+			increase_PC();
 			return;
+
+			ASSERTNOTREACHED();
+			break;
 		case SC_PrintString:
 			handlePrintString();
+			increase_PC();
 			return;
+
+			ASSERTNOTREACHED();
+			break;
 		default:
-			cerr << "Unexpected system call " << type << "\n";
+			cerr << "\nUnexpected system call " << type << "\n";
 			break;
 		}
 		break;
 	default:
-		cerr << "Unexpected user mode exception" << (int)which << "\n";
+		cerr << "\nUnexpected user mode exception" << (int)which << "\n";
 		break;
 	}
 	ASSERTNOTREACHED();
