@@ -25,6 +25,7 @@
 #include "main.h"
 #include "syscall.h"
 #include "ksyscall.h"
+#define MaxFileLength 32
 //----------------------------------------------------------------------
 // ExceptionHandler
 // 	Entry point into the Nachos kernel.  Called when a user program
@@ -168,6 +169,83 @@ void handlePrintString()
 	delete[] buffer;
 }
 
+void handleCreate()
+{
+	// Read address of filename from reg4
+	int virtAddr = kernel->machine->ReadRegister(4);
+	char *filename;
+	// Get string file name from Kernal space
+	filename = User2System(virtAddr, MaxFileLength + 1);
+	if (SysCreateFile(filename))
+	{
+		kernel->machine->WriteRegister(2, 0);
+	}
+	else
+	{
+		kernel->machine->WriteRegister(2, -1);
+	}
+	delete[] filename;
+}
+
+void handleOpen()
+{
+	// Read address of filename from reg4
+	int virtAddr = kernel->machine->ReadRegister(4);
+	// Get string file name from Kernal space
+	char *filename = User2System(virtAddr, MaxFileLength + 1);
+	int type = kernel->machine->ReadRegister(5);
+	int id = SysOpen(filename, type);
+	kernel->machine->WriteRegister(2, id);
+	delete[] filename;
+}
+
+void handleClose()
+{
+	int id = kernel->machine->ReadRegister(4);
+	kernel->machine->WriteRegister(2, SysClose(id));
+}
+
+void handleRead()
+{
+	// Read address of filename from reg4
+	int virtAddr = kernel->machine->ReadRegister(4);
+	int size = kernel->machine->ReadRegister(5);
+	// Get string file name from Kernal space
+	char *buffer = User2System(virtAddr, size + 1);
+	int fileID = kernel->machine->ReadRegister(6);
+	int id = SysRead(buffer, size, fileID);
+	kernel->machine->WriteRegister(2, id);
+	System2User(virtAddr, size, buffer);
+	delete[] buffer;
+}
+
+void handleWrite()
+{
+	int virtAddr = kernel->machine->ReadRegister(4);
+	int size = kernel->machine->ReadRegister(5);
+	char *buffer = User2System(virtAddr, size);
+	int fileID = kernel->machine->ReadRegister(6);
+
+	kernel->machine->WriteRegister(2, SysWrite(buffer, size, fileID));
+	System2User(virtAddr, size, buffer);
+
+	delete[] buffer;
+}
+void handleSeek()
+{
+	int seekPOS = kernel->machine->ReadRegister(4);
+	int fileID = kernel->machine->ReadRegister(5);
+
+	kernel->machine->WriteRegister(2, SysSeek(seekPOS, fileID));
+}
+
+void handleRemove()
+{
+	int virtAddr = kernel->machine->ReadRegister(4);
+	char *fileName = User2System(virtAddr);
+	int id = SysRemove(fileName);
+	kernel->machine->WriteRegister(2, id);
+}
 void ExceptionHandler(ExceptionType which)
 {
 	int type = kernel->machine->ReadRegister(2);
@@ -255,6 +333,54 @@ void ExceptionHandler(ExceptionType which)
 			break;
 		case SC_PrintString:
 			handlePrintString();
+			increase_PC();
+			return;
+
+			ASSERTNOTREACHED();
+			break;
+		case SC_Create:
+			handleCreate();
+			increase_PC();
+			return;
+
+			ASSERTNOTREACHED();
+			break;
+		case SC_Remove:
+			increase_PC();
+			return;
+
+			ASSERTNOTREACHED();
+			break;
+		case SC_Open:
+			handleOpen();
+			increase_PC();
+			return;
+
+			ASSERTNOTREACHED();
+			break;
+		case SC_Read:
+			handleRead();
+			increase_PC();
+			return;
+
+			ASSERTNOTREACHED();
+			break;
+		case SC_Write:
+			handleWrite();
+			increase_PC();
+			return;
+
+			ASSERTNOTREACHED();
+			break;
+		case SC_Seek:
+			handleSeek();
+			increase_PC();
+			return;
+
+			ASSERTNOTREACHED();
+			break;
+		case SC_Close:
+			handleClose();
 			increase_PC();
 			return;
 

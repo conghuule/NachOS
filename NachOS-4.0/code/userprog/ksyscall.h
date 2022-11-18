@@ -140,4 +140,72 @@ void SysPrintString(char *buffer, int length)
     kernel->synchConsoleOut->PutChar(buffer[i]);
   }
 }
+
+// ksyscall 2
+bool SysCreateFile(char *filename)
+{
+  bool openSuccess;
+  if (strlen(filename) == 0)
+  {
+    // Filename = "" return -1 in reg 2
+    openSuccess = false;
+  }
+  else if (filename == NULL)
+  {
+    openSuccess = false;
+  }
+  else if (!kernel->fileSystem->Create(filename))
+  {
+    // Fail to create file
+    openSuccess = false;
+  }
+  else
+  {
+    openSuccess = true;
+  }
+
+  return openSuccess;
+}
+bool SysOpen(char *filename, type)
+{
+  if (type != 0 && type != 1)
+    return -1;
+  int id = kernel->fileSystem->Open(filename, type);
+  if (id == -1)
+    return -1;
+  return id;
+}
+
+int SysClose(int id) { return kernel->fileSystem->Close(id); }
+int SysRead(char *buffer, int size, int fileID)
+{
+  if (fileID == 0)
+  {
+    return kernel->synchConsoleIn->GetString(buffer, size);
+  }
+  return kernel->fileSystem.Read(buffer, size, fileID);
+}
+
+int SysWrite(char *buffer, int size, int fileID)
+{
+  if (fileID == 1)
+  {
+    return kernel->synchConsoleOut->PutString(buffer, size);
+  }
+  return kernel->fileSystem->Write(buffer, size, fileID);
+}
+
+int SysSeek(int seekPos, int fileId)
+{
+  if (fileId <= 1)
+  {
+    return -1;
+  }
+  return kernel->fileSystem->Seek(seekPos, fileId);
+}
+
+int SysRemove(char *fileName)
+{
+  return kernel->fileSystem->Remove(fileName);
+}
 #endif /* ! __USERPROG_KSYSCALL_H__ */
