@@ -147,7 +147,7 @@ bool SysCreateFile(char *filename)
   bool openSuccess;
   if (strlen(filename) == 0)
   {
-    // Filename = "" return -1 in reg 2
+
     openSuccess = false;
   }
   else if (filename == NULL)
@@ -166,7 +166,7 @@ bool SysCreateFile(char *filename)
 
   return openSuccess;
 }
-bool SysOpen(char *filename, type)
+int SysOpen(char *filename, int type)
 {
   if (type != 0 && type != 1)
     return -1;
@@ -183,7 +183,7 @@ int SysRead(char *buffer, int size, int fileID)
   {
     return kernel->synchConsoleIn->GetString(buffer, size);
   }
-  return kernel->fileSystem.Read(buffer, size, fileID);
+  return kernel->fileSystem->Read(buffer, size, fileID);
 }
 
 int SysWrite(char *buffer, int size, int fileID)

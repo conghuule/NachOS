@@ -174,7 +174,6 @@ void handleCreate()
 	// Read address of filename from reg4
 	int virtAddr = kernel->machine->ReadRegister(4);
 	char *filename;
-	// Get string file name from Kernal space
 	filename = User2System(virtAddr, MaxFileLength + 1);
 	if (SysCreateFile(filename))
 	{
@@ -242,7 +241,7 @@ void handleSeek()
 void handleRemove()
 {
 	int virtAddr = kernel->machine->ReadRegister(4);
-	char *fileName = User2System(virtAddr);
+	char *fileName = User2System(virtAddr, MaxFileLength + 1);
 	int id = SysRemove(fileName);
 	kernel->machine->WriteRegister(2, id);
 }
@@ -346,6 +345,7 @@ void ExceptionHandler(ExceptionType which)
 			ASSERTNOTREACHED();
 			break;
 		case SC_Remove:
+			handleRemove();
 			increase_PC();
 			return;
 

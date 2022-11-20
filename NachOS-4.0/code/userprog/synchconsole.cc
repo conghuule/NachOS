@@ -51,6 +51,19 @@ char SynchConsoleInput::GetChar()
     lock->Release();
     return ch;
 }
+int SynchConsoleInput::GetString(char *buffer, int size)
+{
+    for (int i = 0; i < size; ++i)
+    {
+        buffer[i] = GetChar();
+        if (buffer[i] == EOF)
+        {
+            buffer[i] = 0;
+            return -2;
+        }
+    }
+    return size;
+}
 
 //----------------------------------------------------------------------
 // SynchConsoleInput::CallBack
@@ -102,7 +115,12 @@ void SynchConsoleOutput::PutChar(char ch)
     waitFor->P();
     lock->Release();
 }
-
+int SynchConsoleOutput::PutString(char *buffer, int size)
+{
+    for (int i = 0; i < size; ++i)
+        PutChar(buffer[i]);
+    return size;
+}
 //----------------------------------------------------------------------
 // SynchConsoleOutput::CallBack
 //      Interrupt handler called when it's safe to send the next
